@@ -60,6 +60,7 @@ function Cloth(canvas){
 		spacing = (max_dim - (Math.max(x_offset, y_offset) * 2)) / max_points,
 		fabric;
 	
+	this.spacing = spacing;
 	this.num_iterations = 2;
 	this.canvas = canvas;
 	this.points = [];
@@ -90,9 +91,10 @@ function Cloth(canvas){
 			}
 		}
 	}
-	//pin the top right and top left.
+	//pin the top points
 	this.points[0][0].inv_mass = 0;
-	this.points[0][Math.floor(num_x_points / 2)].inv_mass = 0;
+	this.points[0][Math.floor(num_x_points / 3)].inv_mass = 0;
+	this.points[0][Math.floor(num_x_points / 3 * 2)].inv_mass = 0;
 	this.points[0][num_x_points - 1].inv_mass = 0;
 
 	this.num_constraints = this.constraints.length;
@@ -148,14 +150,10 @@ Cloth.prototype = {
 			document.getElementsByTagName('canvas')[0].style.backgroundColor = 'black';
 			for (i = 1; i < num_y; i++){
 				for (j = 1; j < num_x; j++){
-					var off = this.points[i][j].getCurrent().x - this.points[i-1][j].getCurrent().x;
-						off += (this.points[i][j].getCurrent().y - this.points[i-1][j].getCurrent().y);
-					
-					var coef = Math.round(Math.abs(off) * this.canvas.height / 30 * 255);
-					if(coef > 255){
-						coef = 255;
-					}
-					this.canvas.ctx.fillStyle = "rgba(" + coef + ",0," + (255-coef)+ "," + lerp(0.1, 0.8,coef/255.0) + ")";
+					var tension = this.points[i-1][j].getCurrent().subtract(this.points[i][j].getCurrent()).length();
+					var coef = Math.round(Math.abs(tension * this.canvas.height - (this.spacing/2) - 8.4) * (255 / 1.9));
+
+					this.canvas.ctx.fillStyle = "rgba(" + lerp(100, 200,coef/255.0) + ",0," + lerp(100, 255, 1 - coef/255.0)+ "," + lerp(0.2, 0.7,coef/255.0) + ")";
 					this.canvas.ctx.beginPath();
 					this.canvas.ctx.moveTo(this.points[i][j].getCurrent().x * this.canvas.width,this.points[i][j].getCurrent().y * this.canvas.height);
 					this.canvas.ctx.lineTo(this.points[i-1][j].getCurrent().x * this.canvas.width,this.points[i-1][j].getCurrent().y * this.canvas.height);
