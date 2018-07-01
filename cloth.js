@@ -20,6 +20,7 @@ $(document).ready(function(){
 		point.inv_mass = inv_mass;
 	};
 
+
 	$("canvas").mousedown(function(event){
 		isMouseDown = true;
 		mousePosition = position(event);;
@@ -56,7 +57,8 @@ function Cloth(canvas){
 		min_dim = Math.min(width, height),
 		x_offset = width * 0.1,
 		y_offset = height * 0.1,
-		spacing = (max_dim - (Math.max(x_offset, y_offset) * 2)) / max_points;
+		spacing = (max_dim - (Math.max(x_offset, y_offset) * 2)) / max_points,
+		fabric;
 	
 	this.num_iterations = 2;
 	this.canvas = canvas;
@@ -93,12 +95,14 @@ function Cloth(canvas){
 	this.points[0][Math.floor(num_x_points / 2)].inv_mass = 0;
 	this.points[0][num_x_points - 1].inv_mass = 0;
 
-	this.num_constraints = this.constraints.length;	
+	this.num_constraints = this.constraints.length;
 };
 
 Cloth.prototype = {
 	update: function() {
 		this.canvas.clear();
+
+		this.fabric = $("input[name='fabric_type']:checked").val();
 		
 		var num_x = this.num_x_points,
 			num_y = this.num_y_points,
@@ -114,6 +118,7 @@ Cloth.prototype = {
 		}
 		
 		//make sure all the constraints are satisfied.
+		//iterates twice
 		for (j = 0; j < num_i; j++){
 			for (i = 0; i < num_c; i++){
 				this.constraints[i].satisfy();
@@ -124,24 +129,49 @@ Cloth.prototype = {
 			return (b-a)*p + a;
 		}
 
-		for (i = 1; i < num_y; i++){
-			for (j = 1; j < num_x; j++){
-				var off = this.points[i][j].getCurrent().x - this.points[i-1][j].getCurrent().x;
-					off += (this.points[i][j].getCurrent().y - this.points[i-1][j].getCurrent().y);
-				
-				var coef = Math.round(Math.abs(off) * this.canvas.height / 30 * 255);
-
-				this.canvas.ctx.fillStyle = "rgba(" + coef + ",0," + (255-coef)+ "," + lerp(0.2, 0.9,coef/255.0) + ")";
-				this.canvas.ctx.beginPath();
-				this.canvas.ctx.moveTo(this.points[i][j].getCurrent().x * this.canvas.width,this.points[i][j].getCurrent().y * this.canvas.height);
-				this.canvas.ctx.lineTo(this.points[i-1][j].getCurrent().x * this.canvas.width,this.points[i-1][j].getCurrent().y * this.canvas.height);
-				this.canvas.ctx.lineTo(this.points[i-1][j-1].getCurrent().x * this.canvas.width,this.points[i-1][j-1].getCurrent().y * this.canvas.height);
-				this.canvas.ctx.lineTo(this.points[i][j-1].getCurrent().x * this.canvas.width,this.points[i][j-1].getCurrent().y * this.canvas.height);
-				this.canvas.ctx.fill();
+		if(this.fabric == "thin_cloth"){
+			document.getElementsByTagName('canvas')[0].style.backgroundColor = 'rgb(249, 252, 201)';
+			for (i = 1; i < num_y; i++){
+				for (j = 1; j < num_x; j++){
+					this.canvas.ctx.fillStyle = "rgba(47, 225, 214, 0.25)";
+					this.canvas.ctx.beginPath();
+					this.canvas.ctx.moveTo(this.points[i][j].getCurrent().x * this.canvas.width,this.points[i][j].getCurrent().y * this.canvas.height);
+					this.canvas.ctx.lineTo(this.points[i-1][j].getCurrent().x * this.canvas.width,this.points[i-1][j].getCurrent().y * this.canvas.height);
+					this.canvas.ctx.lineTo(this.points[i-1][j-1].getCurrent().x * this.canvas.width,this.points[i-1][j-1].getCurrent().y * this.canvas.height);
+					this.canvas.ctx.lineTo(this.points[i][j-1].getCurrent().x * this.canvas.width,this.points[i][j-1].getCurrent().y * this.canvas.height);
+					this.canvas.ctx.fill();
+				}
 			}
 		}
-		
-		
+
+		else if(this.fabric == "tension_cloth") {
+			document.getElementsByTagName('canvas')[0].style.backgroundColor = 'black';
+			for (i = 1; i < num_y; i++){
+				for (j = 1; j < num_x; j++){
+					var off = this.points[i][j].getCurrent().x - this.points[i-1][j].getCurrent().x;
+						off += (this.points[i][j].getCurrent().y - this.points[i-1][j].getCurrent().y);
+					
+					var coef = Math.round(Math.abs(off) * this.canvas.height / 30 * 255);
+					if(coef > 255){
+						coef = 255;
+					}
+					this.canvas.ctx.fillStyle = "rgba(" + coef + ",0," + (255-coef)+ "," + lerp(0.1, 0.8,coef/255.0) + ")";
+					this.canvas.ctx.beginPath();
+					this.canvas.ctx.moveTo(this.points[i][j].getCurrent().x * this.canvas.width,this.points[i][j].getCurrent().y * this.canvas.height);
+					this.canvas.ctx.lineTo(this.points[i-1][j].getCurrent().x * this.canvas.width,this.points[i-1][j].getCurrent().y * this.canvas.height);
+					this.canvas.ctx.lineTo(this.points[i-1][j-1].getCurrent().x * this.canvas.width,this.points[i-1][j-1].getCurrent().y * this.canvas.height);
+					this.canvas.ctx.lineTo(this.points[i][j-1].getCurrent().x * this.canvas.width,this.points[i][j-1].getCurrent().y * this.canvas.height);
+					this.canvas.ctx.fill();
+				}
+			}
+		}
+
+		else {
+			document.getElementsByTagName('canvas')[0].style.backgroundColor = 'rgb(255, 210, 210)';
+			for (i = 0; i < this.num_constraints; i++){
+				this.constraints[i].draw();
+			}
+		}
 	},
 	
 	getClosestPoint: function(pos) {
