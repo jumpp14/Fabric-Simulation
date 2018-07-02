@@ -5,4 +5,4 @@ You can play with it here https://jumpp14.github.io/Fabric-Simulation/ <br>
   
 Every point on the fabric is a point mass which is connected to its surrounding points by constraints. The constraints control the distance between each point mass. If two points move too far apart, it will pull them closer. If two points are too close together, it will push them apart. The fabric is a collection of constraints and point masses in a never ending struggle.<br>
 
-Reference http://web.archive.org/web/20070610223835/http://www.teknikus.dk/tj/gdc2001.htm <br>
+Reference http://web.archive.org/web/20070610223835/http://www.teknikus.dk/tj/gdc2001.htm 
